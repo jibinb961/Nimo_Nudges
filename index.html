@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Recruiting Coach - Live Interview Monitor</title>
+  <title>NIMO - AI Sales Coach</title>
   <style>
     * { 
       margin: 0; 
@@ -13,316 +13,269 @@
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
-      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      background: #000000;
       min-height: 100vh;
       padding: 30px 20px;
       color: #e0e0e0;
-      position: relative;
-      overflow-x: hidden;
-    }
-    
-    /* Animated background particles */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%);
-      pointer-events: none;
-      animation: float 15s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-20px); }
     }
     
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
-      position: relative;
-      z-index: 1;
+    }
+    
+    .main-layout {
+      display: grid;
+      grid-template-columns: 550px 1fr;
+      gap: 30px;
+      align-items: start;
+    }
+    
+    @media (max-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
     }
     
     .header {
       text-align: center;
       margin-bottom: 40px;
-      animation: slideDown 0.6s ease-out;
-    }
-    
-    @keyframes slideDown {
-      from { 
-        opacity: 0; 
-        transform: translateY(-30px); 
-      }
-      to { 
-        opacity: 1; 
-        transform: translateY(0); 
-      }
     }
     
     .header h1 {
       font-size: 3rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-weight: 700;
+      color: #ffffff;
       margin-bottom: 10px;
-      text-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
     }
     
     .header .subtitle {
       font-size: 1.1rem;
-      color: #a0a0a0;
-      font-weight: 300;
-      letter-spacing: 2px;
+      color: #888;
+      font-weight: 400;
+      letter-spacing: 1px;
     }
     
     .header .badge {
       display: inline-block;
-      background: rgba(102, 126, 234, 0.2);
-      border: 1px solid rgba(102, 126, 234, 0.4);
+      background: #1a1a1a;
+      border: 1px solid #333;
       padding: 6px 16px;
       border-radius: 20px;
       font-size: 0.85rem;
       margin-top: 15px;
-      color: #b8a9ff;
+      color: #aaa;
     }
     
     .control-panel {
-      background: rgba(30, 30, 50, 0.7);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
+      background: #0a0a0a;
+      border-radius: 16px;
       padding: 35px;
-      margin-bottom: 30px;
-      box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      animation: slideUp 0.6s ease-out 0.2s both;
+      border: 1px solid #222;
+      position: sticky;
+      top: 30px;
     }
     
-    @keyframes slideUp {
-      from { 
-        opacity: 0; 
-        transform: translateY(30px); 
-      }
-      to { 
-        opacity: 1; 
-        transform: translateY(0); 
-      }
-    }
-    
-    input {
+    input, select {
       width: 100%;
-      padding: 16px 20px;
-      background: rgba(20, 20, 35, 0.6);
-      border: 2px solid rgba(102, 126, 234, 0.3);
-      border-radius: 12px;
+      padding: 14px 16px;
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 8px;
       font-size: 1rem;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       color: #e0e0e0;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
     }
     
     input::placeholder {
-      color: #666;
+      color: #555;
     }
     
-    input:focus {
+    input:focus, select:focus {
       outline: none;
-      border-color: #667eea;
-      background: rgba(20, 20, 35, 0.9);
-      box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+      border-color: #555;
+      background: #111;
+    }
+    
+    .input-label {
+      display: block;
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .phone-inputs-container {
+      margin-bottom: 20px;
+    }
+    
+    .phone-input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+    
+    .country-select {
+      width: 120px;
+      flex-shrink: 0;
+    }
+    
+    .phone-input {
+      flex: 1;
+    }
+    
+    .remove-phone-btn {
+      padding: 14px 16px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+    
+    .remove-phone-btn:hover {
+      background: #222;
+      color: #fff;
+    }
+    
+    .add-phone-btn {
+      width: 100%;
+      padding: 12px;
+      background: #1a1a1a;
+      border: 1px dashed #444;
+      border-radius: 8px;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+    
+    .add-phone-btn:hover {
+      background: #222;
+      border-color: #666;
+      color: #fff;
     }
     
     .button-group {
-      display: flex;
-      gap: 15px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
       margin-bottom: 20px;
     }
     
     button {
-      flex: 1;
       padding: 14px 24px;
-      border: none;
-      border-radius: 12px;
+      border: 1px solid #333;
+      border-radius: 8px;
       font-size: 1rem;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
+      transition: all 0.2s ease;
+      background: #1a1a1a;
+      color: #e0e0e0;
     }
     
-    button::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      transform: translate(-50%, -50%);
-      transition: width 0.6s, height 0.6s;
-    }
-    
-    button:active::before {
-      width: 300px;
-      height: 300px;
-    }
-    
-    .btn-start {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    }
-    
-    .btn-start:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
-    }
-    
-    .btn-stop {
-      background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
-    }
-    
-    .btn-stop:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(244, 67, 54, 0.6);
-    }
-    
-    .btn-clear {
-      background: rgba(255, 255, 255, 0.1);
-      color: #ccc;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .btn-clear:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.15);
-      transform: translateY(-2px);
-    }
-    
-    .btn-new-session {
-      background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
-    }
-    
-    .btn-new-session:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(0, 176, 155, 0.6);
+    button:hover:not(:disabled) {
+      background: #222;
+      border-color: #444;
     }
     
     button:disabled {
       opacity: 0.4;
       cursor: not-allowed;
-      transform: none !important;
+    }
+    
+    .btn-start {
+      background: #fff;
+      color: #000;
+      border: none;
+    }
+    
+    .btn-start:hover:not(:disabled) {
+      background: #f0f0f0;
+    }
+    
+    .btn-stop {
+      background: #1a1a1a;
+      color: #ff4444;
+      border-color: #ff4444;
+    }
+    
+    .btn-stop:hover:not(:disabled) {
+      background: #ff4444;
+      color: #000;
     }
     
     .status {
       padding: 14px 20px;
-      border-radius: 12px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       gap: 12px;
       font-weight: 500;
       font-size: 0.95rem;
-      transition: all 0.3s ease;
+      background: #0a0a0a;
+      border: 1px solid #222;
     }
     
     .status-dot {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      animation: pulse 2s ease-in-out infinite;
-      box-shadow: 0 0 10px currentColor;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { 
-        opacity: 1; 
-        transform: scale(1);
-      }
-      50% { 
-        opacity: 0.6; 
-        transform: scale(0.9);
-      }
-    }
-    
-    .status-connected {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #10b981;
+      background: #555;
     }
     
     .status-connected .status-dot {
-      background: #10b981;
-    }
-    
-    .status-disconnected {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #ef4444;
+      background: #4ade80;
+      box-shadow: 0 0 10px #4ade80;
+      animation: pulse 2s ease-in-out infinite;
     }
     
     .status-disconnected .status-dot {
-      background: #ef4444;
+      background: #555;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
     
     .transcript-container {
-      background: rgba(30, 30, 50, 0.7);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      padding: 35px;
-      box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      height: 650px;
-      display: flex;
-      flex-direction: column;
-      animation: slideUp 0.6s ease-out 0.4s both;
+      background: #0a0a0a;
+      border-radius: 16px;
+      border: 1px solid #222;
+      overflow: hidden;
     }
     
     .transcript-header {
+      padding: 20px 30px;
+      border-bottom: 1px solid #222;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid rgba(102, 126, 234, 0.2);
     }
     
     .transcript-header h3 {
-      font-size: 1.5rem;
-      color: #e0e0e0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
     }
     
     .transcript-header span {
-      background: rgba(102, 126, 234, 0.2);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      color: #b8a9ff;
-      border: 1px solid rgba(102, 126, 234, 0.3);
+      color: #666;
+      font-size: 0.9rem;
     }
     
     .transcript-display {
-      flex: 1;
+      height: calc(100vh - 250px);
+      min-height: 500px;
       overflow-y: auto;
-      padding-right: 10px;
+      padding: 20px;
     }
     
     .transcript-display::-webkit-scrollbar {
@@ -330,29 +283,22 @@
     }
     
     .transcript-display::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
+      background: #000;
     }
     
     .transcript-display::-webkit-scrollbar-thumb {
-      background: rgba(102, 126, 234, 0.4);
-      border-radius: 10px;
-      transition: background 0.3s;
+      background: #333;
+      border-radius: 4px;
     }
     
     .transcript-display::-webkit-scrollbar-thumb:hover {
-      background: rgba(102, 126, 234, 0.6);
+      background: #444;
     }
     
     .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #666;
       text-align: center;
-      animation: fadeIn 0.5s ease-out;
+      padding: 80px 20px;
+      color: #555;
     }
     
     .empty-state .icon {
@@ -368,215 +314,221 @@
     
     .empty-state .hint {
       font-size: 0.9rem;
-      color: #555;
+      color: #444;
     }
     
     .transcript-item {
-      margin-bottom: 18px;
-      padding: 20px;
-      background: rgba(20, 20, 35, 0.5);
-      border-radius: 14px;
-      border-left: 4px solid;
-      opacity: 0;
-      animation: slideInLeft 0.4s ease-out forwards;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .transcript-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, transparent 100%);
-      pointer-events: none;
+      background: #000;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
     }
     
     .transcript-item:hover {
-      background: rgba(20, 20, 35, 0.7);
-      transform: translateX(5px);
-    }
-    
-    .transcript-item.interviewer {
-      border-left-color: #667eea;
-    }
-    
-    .transcript-item.candidate {
-      border-left-color: #f093fb;
-    }
-    
-    .transcript-item.observer {
-      border-left-color: #fbbf24;
-      opacity: 0.7;
-    }
-    
-    @keyframes slideInLeft {
-      from {
-        opacity: 0;
-        transform: translateX(-30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      border-color: #333;
     }
     
     .transcript-meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-    }
-    
-    .speaker-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      margin-bottom: 10px;
     }
     
     .speaker {
-      font-weight: 700;
-      font-size: 1rem;
-      color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
     }
     
     .role-badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      background: #1a1a1a;
+      color: #888;
+      border: 1px solid #333;
     }
     
     .role-badge.interviewer {
-      background: rgba(102, 126, 234, 0.2);
-      color: #8b9eff;
-      border: 1px solid rgba(102, 126, 234, 0.3);
+      color: #fff;
     }
     
     .role-badge.candidate {
-      background: rgba(240, 147, 251, 0.2);
-      color: #f093fb;
-      border: 1px solid rgba(240, 147, 251, 0.3);
-    }
-    
-    .role-badge.observer {
-      background: rgba(251, 191, 36, 0.2);
-      color: #fbbf24;
-      border: 1px solid rgba(251, 191, 36, 0.3);
+      color: #aaa;
     }
     
     .timestamp {
       font-size: 0.8rem;
-      color: #777;
-      font-weight: 400;
+      color: #555;
     }
     
     .transcript-text {
-      color: #c0c0c0;
-      line-height: 1.7;
+      color: #ccc;
+      line-height: 1.6;
       font-size: 0.95rem;
-      position: relative;
-      z-index: 1;
-    }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-      .header h1 {
-        font-size: 2rem;
-      }
-      
-      .button-group {
-        flex-direction: column;
-      }
-      
-      .transcript-container {
-        height: 500px;
-      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>🎓 AI Recruiting Coach</h1>
-      <p class="subtitle">LIVE INTERVIEW MONITOR</p>
-      <span class="badge">🧠 Powered by Gemini 2.0 Flash</span>
+      <h1>🎓 NIMO</h1>
+      <p class="subtitle">AI Sales Coach</p>
+      <span class="badge">Powered by Gemini 2.0 Flash</span>
     </div>
 
-    <div class="control-panel">
+    <div class="main-layout">
+      <div class="control-panel">
+      <label class="input-label">Meeting URL</label>
       <input 
         type="text" 
         id="meetingUrl" 
-        placeholder="Enter Zoom Meeting URL (e.g., https://zoom.us/j/123456789)"
+        placeholder="Enter Zoom, Google Meet, or Teams meeting URL"
       >
       
-      <input 
-        type="text" 
-        id="phoneNumbers" 
-        placeholder="Phone numbers for SMS notifications (comma-separated, e.g., +16179349090, +12025551234)"
-      >
+      <label class="input-label">SMS Notifications (Optional)</label>
+      <div class="phone-inputs-container" id="phoneInputsContainer">
+        <!-- Phone inputs will be added here dynamically -->
+      </div>
+      <button class="add-phone-btn" id="addPhoneBtn">+ Add Phone Number</button>
       
       <div class="button-group">
-        <button id="startBtn" class="btn-start">🚀 Start Coaching Session</button>
-        <button id="stopBtn" class="btn-stop" disabled>🛑 Stop Session</button>
-        <button id="newSessionBtn" class="btn-new-session">🆕 New Session</button>
-        <button id="clearBtn" class="btn-clear">🗑️ Clear Transcripts</button>
+        <button id="startBtn" class="btn-start">Start Session</button>
+        <button id="stopBtn" class="btn-stop" disabled>Stop Session</button>
+        <button id="newSessionBtn">New Session</button>
+        <button id="clearBtn">Clear Transcripts</button>
       </div>
 
       <div id="status" class="status status-disconnected">
         <div class="status-dot"></div>
         <span>Not Connected</span>
       </div>
-    </div>
-
-    <div class="transcript-container">
-      <div class="transcript-header">
-        <h3>📝 Live Transcript</h3>
-        <span id="count">0 messages</span>
       </div>
-      
-      <div id="transcripts" class="transcript-display">
-        <div class="empty-state">
-          <div class="icon">🎤</div>
-          <p>Ready to Monitor Interview</p>
-          <p class="hint">Enter Zoom URL above and click "Start Coaching Session"</p>
-          <p class="hint" style="margin-top: 15px; color: #444;">
-            💡 Enable Zoom captions for real-time transcription
-          </p>
+
+      <div class="transcript-container">
+        <div class="transcript-header">
+          <h3>Live Transcript</h3>
+          <span id="count">0 messages</span>
+        </div>
+        
+        <div id="transcripts" class="transcript-display">
+          <div class="empty-state">
+            <div class="icon">🎤</div>
+            <p>Ready to Monitor</p>
+            <p class="hint">Enter meeting URL and click "Start Session"</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const API_URL = '';
-    let botId = null;
-    let eventSource = null;
-    let count = 0;
-
-    const meetingUrlInput = document.getElementById('meetingUrl');
+    const API_URL = window.location.origin;
+    const transcripts = document.getElementById('transcripts');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const clearBtn = document.getElementById('clearBtn');
+    const newSessionBtn = document.getElementById('newSessionBtn');
     const status = document.getElementById('status');
-    const transcripts = document.getElementById('transcripts');
     const countEl = document.getElementById('count');
+    const addPhoneBtn = document.getElementById('addPhoneBtn');
+    const phoneInputsContainer = document.getElementById('phoneInputsContainer');
+    
+    let eventSource = null;
+    let botId = null;
+    let count = 0;
+    let phoneInputCount = 0;
+
+    // Phone number management
+    const countryCodes = [
+      { code: '+1', country: 'US/CA' },
+      { code: '+44', country: 'UK' },
+      { code: '+91', country: 'India' },
+      { code: '+61', country: 'Australia' },
+      { code: '+81', country: 'Japan' },
+      { code: '+86', country: 'China' },
+      { code: '+49', country: 'Germany' },
+      { code: '+33', country: 'France' },
+      { code: '+39', country: 'Italy' },
+      { code: '+34', country: 'Spain' },
+      { code: '+7', country: 'Russia' },
+      { code: '+55', country: 'Brazil' },
+      { code: '+52', country: 'Mexico' },
+      { code: '+27', country: 'South Africa' },
+      { code: '+65', country: 'Singapore' },
+      { code: '+971', country: 'UAE' }
+    ];
+
+    function addPhoneInput() {
+      phoneInputCount++;
+      const phoneGroup = document.createElement('div');
+      phoneGroup.className = 'phone-input-group';
+      phoneGroup.id = `phone-group-${phoneInputCount}`;
+      
+      const select = document.createElement('select');
+      select.className = 'country-select';
+      select.id = `country-${phoneInputCount}`;
+      countryCodes.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.code;
+        option.textContent = `${c.code} ${c.country}`;
+        select.appendChild(option);
+      });
+      
+      const input = document.createElement('input');
+      input.type = 'tel';
+      input.className = 'phone-input';
+      input.id = `phone-${phoneInputCount}`;
+      input.placeholder = 'Enter phone number';
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-phone-btn';
+      removeBtn.textContent = '✕';
+      removeBtn.onclick = () => {
+        phoneGroup.remove();
+      };
+      
+      phoneGroup.appendChild(select);
+      phoneGroup.appendChild(input);
+      phoneGroup.appendChild(removeBtn);
+      phoneInputsContainer.appendChild(phoneGroup);
+      
+      input.focus();
+    }
+
+    function getPhoneNumbers() {
+      const phoneNumbers = [];
+      const phoneGroups = phoneInputsContainer.querySelectorAll('.phone-input-group');
+      
+      phoneGroups.forEach(group => {
+        const countrySelect = group.querySelector('.country-select');
+        const phoneInput = group.querySelector('.phone-input');
+        const countryCode = countrySelect.value;
+        const number = phoneInput.value.trim();
+        
+        if (number) {
+          phoneNumbers.push(`${countryCode}${number}`);
+        }
+      });
+      
+      return phoneNumbers;
+    }
+
+    addPhoneBtn.onclick = () => {
+      addPhoneInput();
+    };
 
     startBtn.onclick = async () => {
-      const url = meetingUrlInput.value.trim();
+      const url = document.getElementById('meetingUrl').value.trim();
+      
       if (!url) {
-        showNotification('Please enter a Zoom meeting URL', 'error');
+        alert('Please enter a meeting URL');
         return;
       }
 
@@ -585,16 +537,14 @@
       setStatus('Initializing AI Coach...', 'disconnected');
 
       try {
-        // Get phone numbers input
-        const phoneNumbersInput = document.getElementById('phoneNumbers').value.trim();
-        const phoneNumbersArray = phoneNumbersInput ? phoneNumbersInput.split(',').map(num => num.trim()).filter(num => num) : [];
+        const phoneNumbers = getPhoneNumbers();
         
         const res = await fetch(`${API_URL}/api/start-bot`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             meeting_url: url,
-            phone_numbers: phoneNumbersArray
+            phone_numbers: phoneNumbers
           })
         });
 
@@ -604,7 +554,7 @@
         botId = data.bot_id;
         connectStream();
         
-        let statusMsg = '🎓 AI Coach Active - Monitoring Interview';
+        let statusMsg = '🎓 AI Coach Active';
         if (data.phone_numbers && data.phone_numbers.length > 0) {
           statusMsg += ` | 📱 SMS to ${data.phone_numbers.length} number(s)`;
         }
@@ -612,12 +562,63 @@
         stopBtn.disabled = false;
         startBtn.textContent = '✅ Session Active';
         clearTranscripts();
-        showNotification('AI Recruiting Coach is now monitoring the interview!', 'success');
 
       } catch (error) {
-        showNotification('Error: ' + error.message, 'error');
+        alert('Error: ' + error.message);
         startBtn.disabled = false;
-        startBtn.textContent = '🚀 Start Coaching Session';
+        startBtn.textContent = 'Start Session';
+        setStatus('Connection Failed', 'disconnected');
+      }
+    };
+
+    stopBtn.onclick = async () => {
+      if (!botId) return;
+      
+      stopBtn.disabled = true;
+      stopBtn.textContent = '⏳ Stopping...';
+
+      try {
+        await fetch(`${API_URL}/api/stop-bot/${botId}`, {
+          method: 'POST'
+        });
+        
+        cleanup();
+      } catch (error) {
+        console.error(error);
+        alert('Error stopping session');
+      }
+      
+      stopBtn.textContent = 'Stop Session';
+    };
+
+    clearBtn.onclick = () => {
+      if (count === 0) return;
+      if (confirm('Clear all transcripts?')) {
+        clearTranscripts();
+      }
+    };
+
+    newSessionBtn.onclick = async () => {
+      if (confirm('Start a new session? This will clear all data and stop any active bots.')) {
+        try {
+          if (botId) {
+            await fetch(`${API_URL}/api/stop-bot/${botId}`, { method: 'POST' });
+          }
+          
+          await fetch(`${API_URL}/api/clear-sessions`, { method: 'POST' });
+          
+          clearTranscripts();
+          cleanup();
+          
+          document.getElementById('meetingUrl').value = '';
+          phoneInputsContainer.innerHTML = '';
+          phoneInputCount = 0;
+          
+          alert('New session started! All data cleared.');
+        } catch (error) {
+          console.error(error);
+          alert('Error clearing sessions');
+        }
       }
     };
 
@@ -647,7 +648,6 @@
 
       const item = document.createElement('div');
       
-      // Determine role and styling based on data
       let role, roleLabel, roleIcon;
       
       if (data.isHost) {
@@ -655,8 +655,7 @@
         roleLabel = 'Interviewer';
         roleIcon = '👔';
       } else {
-        // Check if there's a specific role property (for observer detection)
-        role = 'candidate'; // Default to candidate for backward compatibility
+        role = 'candidate';
         roleLabel = 'Candidate';
         roleIcon = '💼';
       }
@@ -667,83 +666,25 @@
       
       item.innerHTML = `
         <div class="transcript-meta">
-          <div class="speaker-info">
-            <span class="speaker">${roleIcon} ${data.speaker}</span>
+          <div class="speaker">
+            <span>${roleIcon}</span>
+            <span>${data.speaker}</span>
             <span class="role-badge ${role}">${roleLabel}</span>
           </div>
           <span class="timestamp">${time}</span>
         </div>
-        <div class="transcript-text">${escapeHtml(data.words)}</div>
+        <div class="transcript-text">${data.words}</div>
       `;
-
+      
       transcripts.appendChild(item);
       transcripts.scrollTop = transcripts.scrollHeight;
-
+      
       count++;
       countEl.textContent = `${count} message${count !== 1 ? 's' : ''}`;
     }
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    stopBtn.onclick = async () => {
-      if (!botId) return;
-
-      stopBtn.disabled = true;
-      stopBtn.textContent = '⏳ Stopping...';
-
-      try {
-        await fetch(`${API_URL}/api/stop-bot/${botId}`, { method: 'POST' });
-        cleanup();
-        showNotification('Coaching session ended', 'success');
-      } catch (error) {
-        console.error(error);
-        showNotification('Error stopping session', 'error');
-      }
-      
-      stopBtn.textContent = '🛑 Stop Session';
-    };
-
-    clearBtn.onclick = () => {
-      if (count === 0) return;
-      if (confirm('Clear all transcripts?')) {
-        clearTranscripts();
-        showNotification('Transcripts cleared', 'success');
-      }
-    };
-
-    newSessionBtn.onclick = async () => {
-      if (confirm('Start a new session? This will clear all data and stop any active bots.')) {
-        try {
-          // Stop active bot if any
-          if (botId) {
-            await fetch(`${API_URL}/api/stop-bot/${botId}`, { method: 'POST' });
-          }
-          
-          // Clear all sessions on server
-          await fetch(`${API_URL}/api/clear-sessions`, { method: 'POST' });
-          
-          // Reset frontend
-          clearTranscripts();
-          cleanup();
-          
-          // Clear inputs
-          document.getElementById('meetingUrl').value = '';
-          document.getElementById('phoneNumbers').value = '';
-          
-          showNotification('New session started! All previous data cleared.', 'success');
-        } catch (error) {
-          console.error(error);
-          showNotification('Error clearing sessions', 'error');
-        }
-      }
-    };
-
     function clearTranscripts() {
-      transcripts.innerHTML = '<div class="empty-state"><div class="icon">👂</div><p>Listening for transcripts...</p><p class="hint">AI Coach is ready to analyze the interview</p></div>';
+      transcripts.innerHTML = '<div class="empty-state"><div class="icon">👂</div><p>Listening...</p><p class="hint">AI Coach is monitoring the call</p></div>';
       count = 0;
       countEl.textContent = '0 messages';
     }
@@ -752,7 +693,7 @@
       if (eventSource) eventSource.close();
       botId = null;
       startBtn.disabled = false;
-      startBtn.textContent = '🚀 Start Coaching Session';
+      startBtn.textContent = 'Start Session';
       stopBtn.disabled = true;
       setStatus('Session Ended', 'disconnected');
     }
@@ -760,12 +701,6 @@
     function setStatus(text, type) {
       status.className = `status status-${type}`;
       status.querySelector('span').textContent = text;
-    }
-
-    function showNotification(message, type) {
-      // Simple console notification for now
-      const icon = type === 'success' ? '✅' : '❌';
-      console.log(`${icon} ${message}`);
     }
 
     window.onbeforeunload = () => {
