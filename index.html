@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Recruiting Coach - Live Interview Monitor</title>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      min-height: 100vh;
+      padding: 30px 20px;
+      color: #e0e0e0;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    /* Animated background particles */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      animation: float 15s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: slideDown 0.6s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from { 
+        opacity: 0; 
+        transform: translateY(-30px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    
+    .header h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+      text-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .header .subtitle {
+      font-size: 1.1rem;
+      color: #a0a0a0;
+      font-weight: 300;
+      letter-spacing: 2px;
+    }
+    
+    .header .badge {
+      display: inline-block;
+      background: rgba(102, 126, 234, 0.2);
+      border: 1px solid rgba(102, 126, 234, 0.4);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin-top: 15px;
+      color: #b8a9ff;
+    }
+    
+    .control-panel {
+      background: rgba(30, 30, 50, 0.7);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 35px;
+      margin-bottom: 30px;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      animation: slideUp 0.6s ease-out 0.2s both;
+    }
+    
+    @keyframes slideUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(30px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    
+    input {
+      width: 100%;
+      padding: 16px 20px;
+      background: rgba(20, 20, 35, 0.6);
+      border: 2px solid rgba(102, 126, 234, 0.3);
+      border-radius: 12px;
+      font-size: 1rem;
+      margin-bottom: 20px;
+      color: #e0e0e0;
+      transition: all 0.3s ease;
+    }
+    
+    input::placeholder {
+      color: #666;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: rgba(20, 20, 35, 0.9);
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    
+    button:active::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .btn-start {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-start:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+    }
+    
+    .btn-stop {
+      background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+    }
+    
+    .btn-stop:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(244, 67, 54, 0.6);
+    }
+    
+    .btn-clear {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ccc;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-clear:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .btn-new-session {
+      background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+    }
+    
+    .btn-new-session:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(0, 176, 155, 0.6);
+    }
+    
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    .status {
+      padding: 14px 20px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+    
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+      box-shadow: 0 0 10px currentColor;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { 
+        opacity: 1; 
+        transform: scale(1);
+      }
+      50% { 
+        opacity: 0.6; 
+        transform: scale(0.9);
+      }
+    }
+    
+    .status-connected {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #10b981;
+    }
+    
+    .status-connected .status-dot {
+      background: #10b981;
+    }
+    
+    .status-disconnected {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+    
+    .status-disconnected .status-dot {
+      background: #ef4444;
+    }
+    
+    .transcript-container {
+      background: rgba(30, 30, 50, 0.7);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 35px;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      height: 650px;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.6s ease-out 0.4s both;
+    }
+    
+    .transcript-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+    }
+    
+    .transcript-header h3 {
+      font-size: 1.5rem;
+      color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .transcript-header span {
+      background: rgba(102, 126, 234, 0.2);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #b8a9ff;
+      border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+    
+    .transcript-display {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    
+    .transcript-display::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .transcript-display::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+    
+    .transcript-display::-webkit-scrollbar-thumb {
+      background: rgba(102, 126, 234, 0.4);
+      border-radius: 10px;
+      transition: background 0.3s;
+    }
+    
+    .transcript-display::-webkit-scrollbar-thumb:hover {
+      background: rgba(102, 126, 234, 0.6);
+    }
+    
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #666;
+      text-align: center;
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    .empty-state .icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+    
+    .empty-state p {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+    
+    .empty-state .hint {
+      font-size: 0.9rem;
+      color: #555;
+    }
+    
+    .transcript-item {
+      margin-bottom: 18px;
+      padding: 20px;
+      background: rgba(20, 20, 35, 0.5);
+      border-radius: 14px;
+      border-left: 4px solid;
+      opacity: 0;
+      animation: slideInLeft 0.4s ease-out forwards;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .transcript-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    
+    .transcript-item:hover {
+      background: rgba(20, 20, 35, 0.7);
+      transform: translateX(5px);
+    }
+    
+    .transcript-item.interviewer {
+      border-left-color: #667eea;
+    }
+    
+    .transcript-item.candidate {
+      border-left-color: #f093fb;
+    }
+    
+    .transcript-item.observer {
+      border-left-color: #fbbf24;
+      opacity: 0.7;
+    }
+    
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .transcript-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .speaker-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .speaker {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #e0e0e0;
+    }
+    
+    .role-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .role-badge.interviewer {
+      background: rgba(102, 126, 234, 0.2);
+      color: #8b9eff;
+      border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+    
+    .role-badge.candidate {
+      background: rgba(240, 147, 251, 0.2);
+      color: #f093fb;
+      border: 1px solid rgba(240, 147, 251, 0.3);
+    }
+    
+    .role-badge.observer {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+    
+    .timestamp {
+      font-size: 0.8rem;
+      color: #777;
+      font-weight: 400;
+    }
+    
+    .transcript-text {
+      color: #c0c0c0;
+      line-height: 1.7;
+      font-size: 0.95rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .button-group {
+        flex-direction: column;
+      }
+      
+      .transcript-container {
+        height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎓 AI Recruiting Coach</h1>
+      <p class="subtitle">LIVE INTERVIEW MONITOR</p>
+      <span class="badge">🧠 Powered by Gemini 2.0 Flash</span>
+    </div>
+
+    <div class="control-panel">
+      <input 
+        type="text" 
+        id="meetingUrl" 
+        placeholder="Enter Zoom Meeting URL (e.g., https://zoom.us/j/123456789)"
+      >
+      
+      <input 
+        type="text" 
+        id="phoneNumbers" 
+        placeholder="Phone numbers for SMS notifications (comma-separated, e.g., +16179349090, +12025551234)"
+      >
+      
+      <div class="button-group">
+        <button id="startBtn" class="btn-start">🚀 Start Coaching Session</button>
+        <button id="stopBtn" class="btn-stop" disabled>🛑 Stop Session</button>
+        <button id="newSessionBtn" class="btn-new-session">🆕 New Session</button>
+        <button id="clearBtn" class="btn-clear">🗑️ Clear Transcripts</button>
+      </div>
+
+      <div id="status" class="status status-disconnected">
+        <div class="status-dot"></div>
+        <span>Not Connected</span>
+      </div>
+    </div>
+
+    <div class="transcript-container">
+      <div class="transcript-header">
+        <h3>📝 Live Transcript</h3>
+        <span id="count">0 messages</span>
+      </div>
+      
+      <div id="transcripts" class="transcript-display">
+        <div class="empty-state">
+          <div class="icon">🎤</div>
+          <p>Ready to Monitor Interview</p>
+          <p class="hint">Enter Zoom URL above and click "Start Coaching Session"</p>
+          <p class="hint" style="margin-top: 15px; color: #444;">
+            💡 Enable Zoom captions for real-time transcription
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '';
+    let botId = null;
+    let eventSource = null;
+    let count = 0;
+
+    const meetingUrlInput = document.getElementById('meetingUrl');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const status = document.getElementById('status');
+    const transcripts = document.getElementById('transcripts');
+    const countEl = document.getElementById('count');
+
+    startBtn.onclick = async () => {
+      const url = meetingUrlInput.value.trim();
+      if (!url) {
+        showNotification('Please enter a Zoom meeting URL', 'error');
+        return;
+      }
+
+      startBtn.disabled = true;
+      startBtn.textContent = '⏳ Connecting...';
+      setStatus('Initializing AI Coach...', 'disconnected');
+
+      try {
+        // Get phone numbers input
+        const phoneNumbersInput = document.getElementById('phoneNumbers').value.trim();
+        const phoneNumbersArray = phoneNumbersInput ? phoneNumbersInput.split(',').map(num => num.trim()).filter(num => num) : [];
+        
+        const res = await fetch(`${API_URL}/api/start-bot`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            meeting_url: url,
+            phone_numbers: phoneNumbersArray
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        botId = data.bot_id;
+        connectStream();
+        
+        let statusMsg = '🎓 AI Coach Active - Monitoring Interview';
+        if (data.phone_numbers && data.phone_numbers.length > 0) {
+          statusMsg += ` | 📱 SMS to ${data.phone_numbers.length} number(s)`;
+        }
+        setStatus(statusMsg, 'connected');
+        stopBtn.disabled = false;
+        startBtn.textContent = '✅ Session Active';
+        clearTranscripts();
+        showNotification('AI Recruiting Coach is now monitoring the interview!', 'success');
+
+      } catch (error) {
+        showNotification('Error: ' + error.message, 'error');
+        startBtn.disabled = false;
+        startBtn.textContent = '🚀 Start Coaching Session';
+      }
+    };
+
+    function connectStream() {
+      eventSource = new EventSource(`${API_URL}/api/stream`);
+
+      eventSource.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        
+        if (msg.type === 'transcript') {
+          addTranscript(msg.data);
+        } else if (msg.type === 'participant_join') {
+          const role = msg.data.isHost ? '👔 Interviewer' : '💼 Candidate';
+          console.log(`${role} joined:`, msg.data.name);
+        }
+      };
+
+      eventSource.onerror = () => {
+        setStatus('Connection Lost', 'disconnected');
+        eventSource.close();
+      };
+    }
+
+    function addTranscript(data) {
+      const empty = transcripts.querySelector('.empty-state');
+      if (empty) empty.remove();
+
+      const item = document.createElement('div');
+      
+      // Determine role and styling based on data
+      let role, roleLabel, roleIcon;
+      
+      if (data.isHost) {
+        role = 'interviewer';
+        roleLabel = 'Interviewer';
+        roleIcon = '👔';
+      } else {
+        // Check if there's a specific role property (for observer detection)
+        role = 'candidate'; // Default to candidate for backward compatibility
+        roleLabel = 'Candidate';
+        roleIcon = '💼';
+      }
+      
+      item.className = `transcript-item ${role}`;
+      
+      const time = new Date(data.timestamp).toLocaleTimeString();
+      
+      item.innerHTML = `
+        <div class="transcript-meta">
+          <div class="speaker-info">
+            <span class="speaker">${roleIcon} ${data.speaker}</span>
+            <span class="role-badge ${role}">${roleLabel}</span>
+          </div>
+          <span class="timestamp">${time}</span>
+        </div>
+        <div class="transcript-text">${escapeHtml(data.words)}</div>
+      `;
+
+      transcripts.appendChild(item);
+      transcripts.scrollTop = transcripts.scrollHeight;
+
+      count++;
+      countEl.textContent = `${count} message${count !== 1 ? 's' : ''}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    stopBtn.onclick = async () => {
+      if (!botId) return;
+
+      stopBtn.disabled = true;
+      stopBtn.textContent = '⏳ Stopping...';
+
+      try {
+        await fetch(`${API_URL}/api/stop-bot/${botId}`, { method: 'POST' });
+        cleanup();
+        showNotification('Coaching session ended', 'success');
+      } catch (error) {
+        console.error(error);
+        showNotification('Error stopping session', 'error');
+      }
+      
+      stopBtn.textContent = '🛑 Stop Session';
+    };
+
+    clearBtn.onclick = () => {
+      if (count === 0) return;
+      if (confirm('Clear all transcripts?')) {
+        clearTranscripts();
+        showNotification('Transcripts cleared', 'success');
+      }
+    };
+
+    newSessionBtn.onclick = async () => {
+      if (confirm('Start a new session? This will clear all data and stop any active bots.')) {
+        try {
+          // Stop active bot if any
+          if (botId) {
+            await fetch(`${API_URL}/api/stop-bot/${botId}`, { method: 'POST' });
+          }
+          
+          // Clear all sessions on server
+          await fetch(`${API_URL}/api/clear-sessions`, { method: 'POST' });
+          
+          // Reset frontend
+          clearTranscripts();
+          cleanup();
+          
+          // Clear inputs
+          document.getElementById('meetingUrl').value = '';
+          document.getElementById('phoneNumbers').value = '';
+          
+          showNotification('New session started! All previous data cleared.', 'success');
+        } catch (error) {
+          console.error(error);
+          showNotification('Error clearing sessions', 'error');
+        }
+      }
+    };
+
+    function clearTranscripts() {
+      transcripts.innerHTML = '<div class="empty-state"><div class="icon">👂</div><p>Listening for transcripts...</p><p class="hint">AI Coach is ready to analyze the interview</p></div>';
+      count = 0;
+      countEl.textContent = '0 messages';
+    }
+
+    function cleanup() {
+      if (eventSource) eventSource.close();
+      botId = null;
+      startBtn.disabled = false;
+      startBtn.textContent = '🚀 Start Coaching Session';
+      stopBtn.disabled = true;
+      setStatus('Session Ended', 'disconnected');
+    }
+
+    function setStatus(text, type) {
+      status.className = `status status-${type}`;
+      status.querySelector('span').textContent = text;
+    }
+
+    function showNotification(message, type) {
+      // Simple console notification for now
+      const icon = type === 'success' ? '✅' : '❌';
+      console.log(`${icon} ${message}`);
+    }
+
+    window.onbeforeunload = () => {
+      if (eventSource) eventSource.close();
+    };
+  </script>
+</body>
+</html>
