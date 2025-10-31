@@ -373,16 +373,16 @@ class SMSManager {
       this.sessionActive = true;
       const { memberName, meetingTitle, platform, botType, startTime } = sessionInfo;
       
-      const startMessage = `🤖 NIMO AI Coach - Session Started
+      const startMessage = `Nimo Live Nudges - Session Started
 
-👤 ${memberName || 'Sales Rep'}
-📅 ${meetingTitle || 'Sales Call'}
-🎥 Platform: ${platform || 'Unknown'}
-⏰ Started: ${startTime}
+Rep: ${memberName || 'Sales Rep'}
+Meeting: ${meetingTitle || 'Sales Call'}
+Platform: ${platform || 'Unknown'}
+Started: ${startTime}
 
-💬 You'll receive live coaching nudges as SMS during this call.
+You'll receive live coaching nudges via SMS during this call.
 
-Powered by NIMO - Real-time AI Coaching`;
+Learn more about Nimo: https://getnimo.com`;
 
       console.log(`📤 Sending session start SMS to ${this.phoneNumbers.length} number(s)...`);
 
@@ -410,14 +410,14 @@ Powered by NIMO - Real-time AI Coaching`;
       this.nudgeCount++;
       const { timestamp, reason, message, batchNumber } = coachingData;
 
-      const smsMessage = `💡 NIMO Nudge #${this.nudgeCount} (${timestamp})
+      const smsMessage = `Nimo Nudge #${this.nudgeCount} (${timestamp})
 
-🎯 ${reason}
+Reason: ${reason}
 
-📋 ${message}
+Coaching: ${message}
 
 ---
-Batch #${batchNumber} | Powered by NIMO`;
+Batch #${batchNumber} | Powered by Nimo`;
 
       console.log(`📤 Sending coaching nudge #${this.nudgeCount} via SMS to ${this.phoneNumbers.length} number(s)...`);
 
@@ -444,15 +444,15 @@ Batch #${batchNumber} | Powered by NIMO`;
       const duration = Math.round((Date.now() - this.sessionStartTime) / 60000);
       const endTime = new Date().toLocaleTimeString();
 
-      const endMessage = `✅ NIMO AI Coach - Session Ended
+      const endMessage = `Nimo Live Nudges - Session Ended
 
-⏱️ Duration: ${duration} minutes
-💡 Total Nudges: ${this.nudgeCount}
-🕐 Ended: ${endTime}
+Duration: ${duration} minutes
+Total Nudges: ${this.nudgeCount}
+Ended: ${endTime}
 
-📊 Review the coaching insights above for call improvement.
+Review the coaching insights above for call improvement.
 
-Powered by NIMO - Real-time AI Coaching`;
+Elevate your sales training with Nimo: https://getnimo.com`;
 
       console.log('📤 Ending SMS session...');
 
@@ -462,7 +462,7 @@ Powered by NIMO - Real-time AI Coaching`;
       );
 
       await Promise.all(sendPromises);
-      console.log('✅ SMS session ended!');
+      console.log('SMS session ended!');
       
       this.sessionActive = false;
       this.nudgeCount = 0;
@@ -480,7 +480,7 @@ Powered by NIMO - Real-time AI Coaching`;
         body: message,
         to: phoneNumber
       });
-      console.log(`✅ SMS sent to ${phoneNumber} | SID: ${result.sid}`);
+      console.log(`SMS sent to ${phoneNumber} | SID: ${result.sid}`);
       return result;
     } catch (error) {
       console.error(`❌ Failed to send SMS to ${phoneNumber}:`, error.message);
@@ -512,13 +512,13 @@ class AIAgent {
     this.slackThread = null;
     if (INTEGRATION_MODES.includes('SLACK') && slackClient) {
       this.slackThread = new SlackThreadManager(SLACK_CHANNEL_ID);
-      console.log('✅ Slack integration initialized');
+      console.log('Slack integration initialized');
     }
     
     this.smsManager = null;
     if (INTEGRATION_MODES.includes('SMS') && twilioClient && phoneNumbers.length > 0) {
       this.smsManager = new SMSManager(phoneNumbers, TWILIO_MESSAGING_SERVICE_SID);
-      console.log('✅ SMS integration initialized');
+      console.log('SMS integration initialized');
     }
     
     // TODO: Initialize Teams manager when TEAMS is in integration modes
