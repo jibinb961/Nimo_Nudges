@@ -161,6 +161,53 @@
       color: #fff;
     }
     
+    .platform-status {
+      background: #000;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .platform-status-title {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    
+    .platform-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    
+    .platform-item:last-child {
+      border-bottom: none;
+    }
+    
+    .platform-icon {
+      font-size: 1.1rem;
+    }
+    
+    .platform-details {
+      flex: 1;
+    }
+    
+    .platform-name {
+      font-size: 0.9rem;
+      color: #e0e0e0;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    
+    .platform-info {
+      font-size: 0.8rem;
+      color: #666;
+    }
+    
     .button-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -378,7 +425,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>🎓 NIMO</h1>
+      <h1>Nimo Live Nudges</h1>
       <p class="subtitle">AI Sales Coach</p>
       <span class="badge">Powered by Gemini 2.0 Flash</span>
     </div>
@@ -397,6 +444,34 @@
         <!-- Phone inputs will be added here dynamically -->
       </div>
       <button class="add-phone-btn" id="addPhoneBtn">+ Add Phone Number</button>
+      
+      <div class="platform-status">
+        <div class="platform-status-title">Connected Platforms</div>
+        
+        <div class="platform-item">
+          <div class="platform-icon">💬</div>
+          <div class="platform-details">
+            <div class="platform-name">Slack</div>
+            <div class="platform-info">Channel: #nimo_live_nudges</div>
+          </div>
+        </div>
+        
+        <div class="platform-item">
+          <div class="platform-icon">📹</div>
+          <div class="platform-details">
+            <div class="platform-name">Zoom</div>
+            <div class="platform-info">Sending messages to the host</div>
+          </div>
+        </div>
+        
+        <div class="platform-item">
+          <div class="platform-icon">📱</div>
+          <div class="platform-details">
+            <div class="platform-name">SMS</div>
+            <div class="platform-info">Twilio messaging enabled</div>
+          </div>
+        </div>
+      </div>
       
       <div class="button-group">
         <button id="startBtn" class="btn-start">Start Session</button>
@@ -554,13 +629,13 @@
         botId = data.bot_id;
         connectStream();
         
-        let statusMsg = '🎓 AI Coach Active';
+        let statusMsg = 'Transcript Viewer Active';
         if (data.phone_numbers && data.phone_numbers.length > 0) {
           statusMsg += ` | 📱 SMS to ${data.phone_numbers.length} number(s)`;
         }
         setStatus(statusMsg, 'connected');
         stopBtn.disabled = false;
-        startBtn.textContent = '✅ Session Active';
+        startBtn.textContent = 'Session Active';
         clearTranscripts();
 
       } catch (error) {
