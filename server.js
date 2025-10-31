@@ -578,18 +578,24 @@ class AIAgent {
       console.log(`👔 Interviewer identified: ${name} (ID: ${id})`);
       
       // Initialize Slack thread when interviewer joins (if Slack is enabled)
+      // Run in background to avoid blocking webhook response
       if (INTEGRATION_MODES.includes('SLACK') && this.slackThread) {
-        await this.initializeSlackThread(name);
+        this.initializeSlackThread(name).catch(err => {
+          console.error('❌ Failed to initialize Slack thread:', err.message);
+        });
       }
       
       // Initialize SMS session when interviewer joins (if SMS is enabled)
+      // Run in background to avoid blocking webhook response
       if (INTEGRATION_MODES.includes('SMS') && this.smsManager) {
-        await this.smsManager.startSession({
+        this.smsManager.startSession({
           memberName: name || 'Sales Rep',
           meetingTitle: this.extractMeetingTitle(this.meetingUrl),
           platform: this.detectPlatform(this.meetingUrl),
           botType: 'Sales Coach',
           startTime: new Date().toLocaleTimeString()
+        }).catch(err => {
+          console.error('❌ Failed to start SMS session:', err.message);
         });
       }
     }
@@ -989,7 +995,13 @@ app.get('/api/stream', (req, res) => {
 
   res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
+  // Send keepalive ping every 15 seconds to prevent timeout
+  const keepaliveInterval = setInterval(() => {
+    res.write(`: keepalive\n\n`);
+  }, 15000);
+
   req.on('close', () => {
+    clearInterval(keepaliveInterval);
     sseClients.delete(res);
     console.log('📡 Client disconnected. Total:', sseClients.size);
   });
