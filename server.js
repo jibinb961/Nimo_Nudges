@@ -264,10 +264,10 @@ class SlackThreadManager {
           },
           {
             type: 'section',
-            fields: [
-              { type: 'mrkdwn', text: `*Reason:*\n${reason}` },
-              { type: 'mrkdwn', text: `*Batch:*\n#${batchNumber}` }
-            ]
+            text: {
+              type: 'mrkdwn',
+              text: `*Reason:*\n${reason}`
+            }
           },
           {
             type: 'section',
@@ -281,7 +281,7 @@ class SlackThreadManager {
             elements: [
               {
                 type: 'mrkdwn',
-                text: `📊 Analyzed ${messagesAnalyzed} messages in this batch`
+                text: `Powered by Nimo`
               }
             ]
           },
@@ -417,7 +417,7 @@ Reason: ${reason}
 Coaching: ${message}
 
 ---
-Batch #${batchNumber} | Powered by Nimo`;
+Powered by Nimo`;
 
       console.log(`📤 Sending coaching nudge #${this.nudgeCount} via SMS to ${this.phoneNumbers.length} number(s)...`);
 
@@ -493,7 +493,7 @@ Elevate your sales training with Nimo: https://getnimo.com`;
 // AI Agent Class - Sales Coach
 // ============================================
 class AIAgent {
-  constructor(botId, meetingUrl, phoneNumbers = []) {
+  constructor(botId, meetingUrl, phoneNumbers = [], frequencyConfig = { mode: 'frequency', level: 'medium' }) {
     this.botId = botId;
     this.meetingUrl = meetingUrl;
     this.phoneNumbers = phoneNumbers;
@@ -503,9 +503,25 @@ class AIAgent {
     this.questionsAsked = new Set(); // Track what was asked
     this.lastCoachingTime = null;
     
-    // Batching configuration - send to LLM every 6 messages
+    // Batching configuration - dynamic based on frequency settings
     this.transcriptBuffer = [];
-    this.batchSize = 6; // Analyze every 6 transcripts ONLY
+    this.frequencyConfig = frequencyConfig;
+    this.timeBasedInterval = null; // Timer for time-based mode
+    
+    // Set buffer size based on mode
+    if (frequencyConfig.mode === 'frequency') {
+      const levels = { high: 10, medium: 20, low: 30 };
+      this.batchSize = levels[frequencyConfig.level] || 20;
+      console.log(`📊 Frequency Mode: ${frequencyConfig.level.toUpperCase()} (${this.batchSize} messages per batch)`);
+    } else if (frequencyConfig.mode === 'time') {
+      this.batchSize = 9999; // Large number, won't trigger by count
+      this.timeIntervalMinutes = frequencyConfig.minutes;
+      console.log(`⏱️  Time-based Mode: Every ${this.timeIntervalMinutes} minute(s)`);
+      
+      // Start time-based interval
+      this.startTimeBasedFlushing();
+    }
+    
     this.batchCount = 0; // Track how many batches have been analyzed
     
     // Initialize integration managers for all enabled platforms
@@ -537,7 +553,33 @@ class AIAgent {
     });
     console.log('💼 AI Sales Coach initialized for bot:', botId);
     console.log(`📊 Integration Modes: ${INTEGRATION_MODES.join(', ')}`);
-    console.log(`📊 Batching: Analyzing every ${this.batchSize} messages (AI maintains full conversation context)`);
+    if (this.frequencyConfig.mode === 'frequency') {
+      console.log(`📊 Batching: Analyzing every ${this.batchSize} messages (AI maintains full conversation context)`);
+    }
+  }
+  
+  startTimeBasedFlushing() {
+    // Flush buffer every N minutes for time-based mode
+    const intervalMs = this.timeIntervalMinutes * 60 * 1000;
+    
+    this.timeBasedInterval = setInterval(async () => {
+      if (this.transcriptBuffer.length > 0) {
+        console.log(`⏰ Time-based flush triggered (${this.timeIntervalMinutes} min interval)`);
+        await this.analyzeBatch();
+      } else {
+        console.log(`⏰ Time interval reached but no transcripts to analyze yet`);
+      }
+    }, intervalMs);
+    
+    console.log(`⏱️  Time-based flushing started: Every ${this.timeIntervalMinutes} minute(s)`);
+  }
+  
+  stopTimeBasedFlushing() {
+    if (this.timeBasedInterval) {
+      clearInterval(this.timeBasedInterval);
+      this.timeBasedInterval = null;
+      console.log('⏱️  Time-based flushing stopped');
+    }
   }
   
   async initializeSlackThread(memberName) {
@@ -638,13 +680,16 @@ class AIAgent {
     try {
       this.batchCount++; // Increment batch counter
       
+      // Store buffer size before clearing
+      const messagesInBatch = this.transcriptBuffer.length;
+      
       // Combine buffered transcripts into one message
       const batchMessage = this.transcriptBuffer.join('\n');
       
       // Clear buffer and reset for next batch
       this.transcriptBuffer = [];
       
-      console.log(`📊 Batch #${this.batchCount} | Total messages so far: ${this.conversationHistory.length}`);
+      console.log(`📊 Batch #${this.batchCount} | Messages in batch: ${messagesInBatch} | Total messages so far: ${this.conversationHistory.length}`);
       
       // Send batch to Gemini for analysis
       const result = await this.chat.sendMessage(batchMessage);
@@ -683,7 +728,7 @@ class AIAgent {
                   reason: reason,
                   message: message,
                   batchNumber: this.batchCount,
-                  messagesAnalyzed: 6
+                  messagesAnalyzed: messagesInBatch
                 }).catch(err => {
                   console.error('❌ Slack send failed:', err.message);
                 })
@@ -710,7 +755,7 @@ class AIAgent {
                   reason: reason,
                   message: message,
                   batchNumber: this.batchCount,
-                  messagesAnalyzed: 6
+                  messagesAnalyzed: messagesInBatch
                 }).catch(err => {
                   console.error('❌ SMS send failed:', err.message);
                 })
@@ -726,7 +771,7 @@ class AIAgent {
                   reason: reason,
                   message: message,
                   batchNumber: this.batchCount,
-                  messagesAnalyzed: 6
+                  messagesAnalyzed: messagesInBatch
                 }).catch(err => {
                   console.error('❌ Teams send failed:', err.message);
                 })
@@ -760,6 +805,9 @@ class AIAgent {
   }
 
   async flushBuffer() {
+    // Stop time-based flushing if active
+    this.stopTimeBasedFlushing();
+    
     // Analyze any remaining transcripts when session ends
     if (this.transcriptBuffer.length > 0) {
       console.log(`🔄 Flushing ${this.transcriptBuffer.length} remaining transcripts...`);
@@ -814,7 +862,7 @@ class AIAgent {
 // ROUTE 1: Start Bot
 // ============================================
 app.post('/api/start-bot', async (req, res) => {
-  const { meeting_url, phone_numbers } = req.body;
+  const { meeting_url, phone_numbers, frequency_config } = req.body;
 
   if (!meeting_url) {
     return res.status(400).json({ error: 'meeting_url is required' });
@@ -829,10 +877,18 @@ app.post('/api/start-bot', async (req, res) => {
       phoneNumbersArray = phone_numbers.split(',').map(num => num.trim()).filter(num => num);
     }
   }
+  
+  // Parse frequency config (default to medium if not provided)
+  const frequencyConfig = frequency_config || { mode: 'frequency', level: 'medium' };
 
   console.log('📞 Starting bot for:', meeting_url);
   if (phoneNumbersArray.length > 0) {
     console.log('📱 SMS notifications will be sent to:', phoneNumbersArray.join(', '));
+  }
+  if (frequencyConfig.mode === 'frequency') {
+    console.log(`🎚️  Frequency: ${frequencyConfig.level}`);
+  } else {
+    console.log(`⏱️  Time-based: Every ${frequencyConfig.minutes} minute(s)`);
   }
 
   const webhookUrl = `${process.env.WEBHOOK_BASE_URL}/api/webhook?secret=${process.env.WEBHOOK_SECRET}`;
@@ -868,13 +924,14 @@ app.post('/api/start-bot', async (req, res) => {
       throw new Error(JSON.stringify(data));
     }
 
-    // Initialize session with AI agent (include phone numbers)
+    // Initialize session with AI agent (include phone numbers and frequency config)
     sessions.set(data.id, {
       botId: data.id,
       meetingUrl: meeting_url,
       phoneNumbers: phoneNumbersArray,
+      frequencyConfig: frequencyConfig,
       transcripts: [],
-      aiAgent: new AIAgent(data.id, meeting_url, phoneNumbersArray)
+      aiAgent: new AIAgent(data.id, meeting_url, phoneNumbersArray, frequencyConfig)
     });
 
     console.log('✅ Bot created:', data.id);

@@ -445,6 +445,27 @@
       </div>
       <button class="add-phone-btn" id="addPhoneBtn">+ Add Phone Number</button>
       
+      <label class="input-label">Coaching Frequency</label>
+      <div style="margin-bottom: 15px;">
+        <select id="frequencyMode" style="padding: 10px; border-radius: 6px; background: #1a1a1a; color: #e0e0e0; border: 1px solid #333; width: 100%; font-size: 0.95rem; margin-bottom: 10px;">
+          <option value="frequency">Message-based (High/Medium/Low)</option>
+          <option value="time">Time-based (Minutes)</option>
+        </select>
+        
+        <div id="frequencyOptions" style="display: block;">
+          <select id="frequencyLevel" style="padding: 10px; border-radius: 6px; background: #1a1a1a; color: #e0e0e0; border: 1px solid #333; width: 100%; font-size: 0.95rem;">
+            <option value="high">High (Every 10 messages)</option>
+            <option value="medium" selected>Medium (Every 20 messages)</option>
+            <option value="low">Low (Every 30 messages)</option>
+          </select>
+        </div>
+        
+        <div id="timeOptions" style="display: none;">
+          <input type="number" id="timeInterval" min="1" max="60" value="5" placeholder="Enter minutes" style="padding: 10px; border-radius: 6px; background: #1a1a1a; color: #e0e0e0; border: 1px solid #333; width: 100%; font-size: 0.95rem;">
+          <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">Send coaching every N minutes (1-60)</div>
+        </div>
+      </div>
+      
       <div class="platform-status">
         <div class="platform-status-title">Connected Platforms</div>
         
@@ -599,6 +620,21 @@
       addPhoneInput();
     };
 
+    // Handle frequency mode toggle
+    const frequencyMode = document.getElementById('frequencyMode');
+    const frequencyOptions = document.getElementById('frequencyOptions');
+    const timeOptions = document.getElementById('timeOptions');
+    
+    frequencyMode.onchange = () => {
+      if (frequencyMode.value === 'frequency') {
+        frequencyOptions.style.display = 'block';
+        timeOptions.style.display = 'none';
+      } else {
+        frequencyOptions.style.display = 'none';
+        timeOptions.style.display = 'block';
+      }
+    };
+
     startBtn.onclick = async () => {
       const url = document.getElementById('meetingUrl').value.trim();
       
@@ -614,12 +650,31 @@
       try {
         const phoneNumbers = getPhoneNumbers();
         
+        // Get frequency configuration
+        const mode = frequencyMode.value;
+        let frequencyConfig = { mode };
+        
+        if (mode === 'frequency') {
+          frequencyConfig.level = document.getElementById('frequencyLevel').value;
+        } else {
+          const minutes = parseInt(document.getElementById('timeInterval').value);
+          if (!minutes || minutes < 1 || minutes > 60) {
+            alert('Please enter a valid time interval (1-60 minutes)');
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start Session';
+            setStatus('Configuration Error', 'disconnected');
+            return;
+          }
+          frequencyConfig.minutes = minutes;
+        }
+        
         const res = await fetch(`${API_URL}/api/start-bot`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             meeting_url: url,
-            phone_numbers: phoneNumbers
+            phone_numbers: phoneNumbers,
+            frequency_config: frequencyConfig
           })
         });
 
