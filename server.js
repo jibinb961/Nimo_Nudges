@@ -264,21 +264,7 @@ class SlackThreadManager {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `*💡 Nudge #${this.nudgeCount}* (${timestamp})`
-            }
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*Reason:*\n${reason}`
-            }
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*Coaching:*\n${message}`
+              text: `*💡 Nudge #${this.nudgeCount}* (${timestamp})\n\n*${reason}*\n${message}`
             }
           },
           {
@@ -498,10 +484,11 @@ Elevate your sales training with Nimo: https://getnimo.com`;
 // AI Agent Class - Sales Coach
 // ============================================
 class AIAgent {
-  constructor(botId, meetingUrl, phoneNumbers = [], frequencyConfig = { mode: 'frequency', level: 'medium' }) {
+  constructor(botId, meetingUrl, phoneNumbers = [], frequencyConfig = { mode: 'frequency', level: 'medium' }, salesRepName = null) {
     this.botId = botId;
     this.meetingUrl = meetingUrl;
     this.phoneNumbers = phoneNumbers;
+    this.salesRepName = salesRepName; // User-specified sales rep name (optional)
     this.conversationHistory = [];
     this.interviewerId = null;
     this.interviewerName = null;
@@ -558,6 +545,11 @@ class AIAgent {
     });
     console.log('💼 AI Sales Coach initialized for bot:', botId);
     console.log(`📊 Integration Modes: ${INTEGRATION_MODES.join(', ')}`);
+    if (this.salesRepName) {
+      console.log(`👔 Sales Rep Identification: By name "${this.salesRepName}" (not by host)`);
+    } else {
+      console.log(`👔 Sales Rep Identification: Meeting host (default)`);
+    }
     if (this.frequencyConfig.mode === 'frequency') {
       console.log(`📊 Batching: Analyzing every ${this.batchSize} messages (AI maintains full conversation context)`);
     }
@@ -650,13 +642,28 @@ class AIAgent {
 
   async processTranscript(speaker, participantId, isHost, text) {
     try {
-      // Identify sales rep (host) on first message
-      if (isHost && !this.interviewerId) {
-        this.setInterviewer(speaker, participantId);
+      // Identify sales rep based on mode
+      if (!this.interviewerId) {
+        if (this.salesRepName) {
+          // Mode 1: Identify by name match (case-insensitive, partial match)
+          const speakerLower = speaker.toLowerCase();
+          const salesRepLower = this.salesRepName.toLowerCase();
+          if (speakerLower.includes(salesRepLower) || salesRepLower.includes(speakerLower)) {
+            this.setInterviewer(speaker, participantId);
+            console.log(`✅ Sales rep identified by name match: "${speaker}" matches "${this.salesRepName}"`);
+          }
+        } else {
+          // Mode 2: Identify by host (default/fallback)
+          if (isHost) {
+            this.setInterviewer(speaker, participantId);
+            console.log(`✅ Sales rep identified as meeting host: "${speaker}"`);
+          }
+        }
       }
       
-      // Simple role assignment
-      const role = isHost ? 'SALES REP' : 'PROSPECT';
+      // Role assignment: check if this speaker is the identified sales rep
+      const isSalesRep = (this.interviewerId && participantId === this.interviewerId);
+      const role = isSalesRep ? 'SALES REP' : 'PROSPECT';
       const transcriptEntry = { role, speaker, text, timestamp: Date.now() };
       
       // Add to conversation history
@@ -867,7 +874,7 @@ class AIAgent {
 // ROUTE 1: Start Bot
 // ============================================
 app.post('/api/start-bot', async (req, res) => {
-  const { meeting_url, phone_numbers, frequency_config } = req.body;
+  const { meeting_url, phone_numbers, frequency_config, sales_rep_name } = req.body;
 
   if (!meeting_url) {
     return res.status(400).json({ error: 'meeting_url is required' });
@@ -885,8 +892,16 @@ app.post('/api/start-bot', async (req, res) => {
   
   // Parse frequency config (default to medium if not provided)
   const frequencyConfig = frequency_config || { mode: 'frequency', level: 'medium' };
+  
+  // Parse sales rep name (optional)
+  const salesRepName = sales_rep_name ? sales_rep_name.trim() : null;
 
   console.log('📞 Starting bot for:', meeting_url);
+  if (salesRepName) {
+    console.log(`👔 Sales Rep: ${salesRepName} (will identify by name)`);
+  } else {
+    console.log(`👔 Sales Rep: Meeting host (default)`);
+  }
   if (phoneNumbersArray.length > 0) {
     console.log('📱 SMS notifications will be sent to:', phoneNumbersArray.join(', '));
   }
@@ -929,14 +944,15 @@ app.post('/api/start-bot', async (req, res) => {
       throw new Error(JSON.stringify(data));
     }
 
-    // Initialize session with AI agent (include phone numbers and frequency config)
+    // Initialize session with AI agent (include phone numbers, frequency config, and sales rep name)
     sessions.set(data.id, {
       botId: data.id,
       meetingUrl: meeting_url,
       phoneNumbers: phoneNumbersArray,
       frequencyConfig: frequencyConfig,
+      salesRepName: salesRepName,
       transcripts: [],
-      aiAgent: new AIAgent(data.id, meeting_url, phoneNumbersArray, frequencyConfig)
+      aiAgent: new AIAgent(data.id, meeting_url, phoneNumbersArray, frequencyConfig, salesRepName)
     });
 
     console.log('✅ Bot created:', data.id);
@@ -998,15 +1014,31 @@ app.post('/api/webhook', (req, res) => {
         text = transcript.words;
       }
 
+      // Determine actual role based on AI agent's identification
+      let actualRole = 'PROSPECT'; // Default
+      let isSalesRep = false;
+      
+      if (session.aiAgent && session.aiAgent.interviewerId) {
+        // If we've already identified the sales rep, check if this is them
+        isSalesRep = (participantId === session.aiAgent.interviewerId);
+        actualRole = isSalesRep ? 'SALES REP' : 'PROSPECT';
+      } else if (isHost && !session.aiAgent.salesRepName) {
+        // Fallback: if no name specified and this is the host, assume sales rep
+        isSalesRep = true;
+        actualRole = 'SALES REP';
+      }
+      
       const message = {
         speaker: speaker,
         words: text,
         timestamp: new Date().toISOString(),
-        isHost: isHost
+        isHost: isHost,
+        isSalesRep: isSalesRep,
+        role: actualRole
       };
 
       if (message.words) {
-        const roleIcon = isHost ? '👔' : '💼';
+        const roleIcon = isSalesRep ? '👔' : '💼';
         console.log(`\n${roleIcon} [${message.speaker}]: ${message.words}`);
         session.transcripts.push(message);
         broadcast({ type: 'transcript', data: message });
@@ -1022,13 +1054,11 @@ app.post('/api/webhook', (req, res) => {
     if (event === 'participant_events.join') {
       const participant = data.data?.participant;
       if (participant) {
-        const roleLabel = participant.is_host ? '(Interviewer)' : '(Candidate)';
+        const roleLabel = participant.is_host ? '(Host)' : '(Participant)';
         console.log(`\n👋 ${participant.name} joined ${roleLabel}`);
         
-        // Identify interviewer when they join
-        if (session.aiAgent && participant.is_host) {
-          session.aiAgent.setInterviewer(participant.name, participant.id);
-        }
+        // Note: Sales rep identification now happens in processTranscript based on name or host status
+        // Don't automatically set as interviewer here anymore
         
         broadcast({ 
           type: 'participant_join', 

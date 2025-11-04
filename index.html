@@ -439,6 +439,18 @@
         placeholder="Enter Zoom, Google Meet, or Teams meeting URL"
       >
       
+      <label class="input-label">Sales Rep Name (Optional)</label>
+      <input 
+        type="text" 
+        id="salesRepName" 
+        value="Ian"
+        placeholder="e.g., Ian (leave empty to auto-detect host)"
+        style="margin-bottom: 10px;"
+      >
+      <div style="font-size: 0.8rem; color: #666; margin-top: -5px; margin-bottom: 15px;">
+        If provided, the system will identify this person as the sales rep instead of the meeting host. Useful when joining client-hosted meetings.
+      </div>
+      
       <label class="input-label">SMS Notifications (Optional)</label>
       <div class="phone-inputs-container" id="phoneInputsContainer">
         <!-- Phone inputs will be added here dynamically -->
@@ -649,6 +661,7 @@
 
       try {
         const phoneNumbers = getPhoneNumbers();
+        const salesRepName = document.getElementById('salesRepName').value.trim();
         
         // Get frequency configuration
         const mode = frequencyMode.value;
@@ -668,14 +681,21 @@
           frequencyConfig.minutes = minutes;
         }
         
+        const requestBody = { 
+          meeting_url: url,
+          phone_numbers: phoneNumbers,
+          frequency_config: frequencyConfig
+        };
+        
+        // Add sales rep name if provided
+        if (salesRepName) {
+          requestBody.sales_rep_name = salesRepName;
+        }
+        
         const res = await fetch(`${API_URL}/api/start-bot`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            meeting_url: url,
-            phone_numbers: phoneNumbers,
-            frequency_config: frequencyConfig
-          })
+          body: JSON.stringify(requestBody)
         });
 
         const data = await res.json();
@@ -741,6 +761,7 @@
           cleanup();
           
           document.getElementById('meetingUrl').value = '';
+          document.getElementById('salesRepName').value = 'Ian';
           phoneInputsContainer.innerHTML = '';
           phoneInputCount = 0;
           
@@ -761,7 +782,7 @@
         if (msg.type === 'transcript') {
           addTranscript(msg.data);
         } else if (msg.type === 'participant_join') {
-          const role = msg.data.isHost ? '👔 Interviewer' : '💼 Candidate';
+          const role = msg.data.isHost ? '👔 Sales Rep' : '💼 Prospect';
           console.log(`${role} joined:`, msg.data.name);
         }
       };
@@ -780,13 +801,14 @@
       
       let role, roleLabel, roleIcon;
       
-      if (data.isHost) {
+      // Use the backend's role determination (isSalesRep or role field)
+      if (data.isSalesRep || data.role === 'SALES REP') {
         role = 'interviewer';
-        roleLabel = 'Interviewer';
+        roleLabel = 'Sales Rep';
         roleIcon = '👔';
       } else {
         role = 'candidate';
-        roleLabel = 'Candidate';
+        roleLabel = 'Prospect';
         roleIcon = '💼';
       }
       
